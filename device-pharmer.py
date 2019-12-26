@@ -9,8 +9,8 @@ Use -f to look for a certain string in the html response to check if
 authentication succeeded. Will attempt to login first via a login form
 and should that fail or not exist, login via HTTP Basic Auth.
 
-eequires:   Linux
-            Python 2.7
+Requires:   Linux
+            Python
                 gevents
                 mechanize
                 BeautifulSoup
@@ -35,7 +35,10 @@ import gevent
 import argparse
 import mechanize
 from bs4 import BeautifulSoup
-import cookielib
+try:
+    import cookielib
+except:
+    import http.cookiejar as cookielib
 from socket import setdefaulttimeout
 import re
 from sys import exit
@@ -95,8 +98,8 @@ def shodan_search(search, apikey, pages, ipfile):
     try:
         results = api.search(search, page=1)
         total_results = results['total']
-        print '[+] Results: %d' % total_results
-        print '[*] Page 1...'
+        print('[+] Results: %d' % total_results)
+        print('[*] Page 1...')
         pages = max_pages(pages, total_results)
         for r in results['matches']:
             # Replace the following ports with port 80 since they'll virtually never have a web server running
@@ -109,7 +112,7 @@ def shodan_search(search, apikey, pages, ipfile):
             i = 2
             while i <= pages:
                 results = api.search(search, page=i)
-                print '[*] Page %d...' % i
+                print('[*] Page %d...' % i)
                 for r in results['matches']:
                     ips_found.append(r['ip_str'])
                 i += 1
@@ -117,7 +120,7 @@ def shodan_search(search, apikey, pages, ipfile):
         return ips_found
 
     except Exception as e:
-        print '[!] Shodan search error:', e
+        print('[!] Shodan search error:', e)
 
 def get_ips_from_file(ipfile):
     ''' Read IPs from a file '''
@@ -153,10 +156,10 @@ def browser_mechanize(proxy, ssl):
     br.set_cookiejar(cj)
     # Browser options
     if proxy and ssl:
-        print '[*] HTTPS proxies are unsupported, using the proxy specified anyway: %s' % proxy
+        print('[*] HTTPS proxies are unsupported, using the proxy specified anyway: %s' % proxy)
         br.set_proxies({'http':proxy})
     elif proxy:
-        print '[*] HTTP proxy being employed: %s' % proxy
+        print('[*] HTTP proxy being employed: %s' % proxy)
         br.set_proxies({'http':proxy})
     br.set_handle_equiv(True)
     br.set_handle_gzip(True)
@@ -356,12 +359,12 @@ class Scraper():
             if mark == '*' or mark == '+':
                 with open('%s_results.txt' % name, 'a+') as f:
                     f.write('[%s] %s | %s %s\n' % (mark, target, label, sublabel))
-            print results
+            print(results)
         except Exception as e:
             results = '[%s] %s | %s %s' % (mark, target, label, str(e))
             with open('%s_results.txt' % name, 'a+') as f:
                 f.write('%s\n' % results)
-            print results
+            print(results)
 
 
 #############################################################################
@@ -392,8 +395,8 @@ def check_targets(targets):
 
 def handle_ip_range(iprange):
     parted = tuple(part for part in iprange.split('.'))
-    rsa = range(4)
-    rsb = range(4)
+    rsa = list(range(4))
+    rsb = list(range(4))
     for i in range(4):
         hyphen = parted[i].find('-')
         if hyphen != -1:
@@ -454,7 +457,7 @@ def main(args):
     con = int(args.concurrent)
 
     # By default run 1000 concurrently at a time
-    target_groups = [targets[x:x+con] for x in xrange(0, len(targets), con)]
+    target_groups = [targets[x:x+con] for x in range(0, len(targets), con)]
     for chunk_targets in target_groups:
         jobs = [gevent.spawn(S.run, target) for target in chunk_targets]
         gevent.joinall(jobs)
